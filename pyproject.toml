@@ -1,0 +1,19 @@
+[project]
+name = "argentina-income-analyzer"
+version = "0.1.0"
+description = "Real Argentine income & poverty percentile tool from INDEC EPH microdata"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Lucas Daddiego" }]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=2.0",
+]
+
+[project.urls]
+Repository = "https://github.com/lucasdaddiego/argentina_income_analyzer"
+
+# This is an application, not a distributable package — don't try to build it.
+[tool.uv]
+package = false

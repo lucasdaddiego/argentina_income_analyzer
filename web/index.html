@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#2a5c8a" />
+    <title>¿Dónde estás? · Distribución del ingreso en Argentina</title>
+    <meta
+      name="description"
+      content="Tu posición en la distribución del ingreso en Argentina, calculada con microdatos reales de la EPH (INDEC): percentil, decil, regiones, curva de Lorenz, Gini, evolución y línea de pobreza."
+    />
+    <!-- Social preview. Set og:url and add an og:image (1200×630 PNG in public/) once deployed. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:title" content="¿Dónde estás en la distribución del ingreso en Argentina?" />
+    <meta
+      property="og:description"
+      content="Tu percentil, decil y línea de pobreza, calculados con microdatos reales de la EPH (INDEC)."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="¿Dónde estás en la distribución del ingreso en Argentina?" />
+    <meta
+      name="twitter:description"
+      content="Tu percentil, decil y línea de pobreza, calculados con microdatos reales de la EPH (INDEC)."
+    />
+  </head>
+  <body>
+    <div id="sticky-bar" class="sticky-bar" hidden></div>
+
+    <main id="app">
+      <header class="site-header">
+        <p class="kicker">Distribución del ingreso · Argentina</p>
+        <h1>¿Dónde estás en la distribución del ingreso?</h1>
+        <p class="lede">
+          Poné lo que entra a tu hogar por mes y cuántas personas viven ahí. Lo comparamos con
+          <strong>todos los hogares del país</strong> usando los microdatos de la Encuesta Permanente de
+          Hogares (INDEC) —la misma encuesta con la que se mide la pobreza y la desigualdad— y te mostramos,
+          paso a paso y con todos los números, exactamente dónde queda tu hogar.
+        </p>
+        <p class="source-badge" id="source-badge">cargando datos…</p>
+      </header>
+
+      <section class="controls" id="controls" aria-label="Datos de tu hogar">
+        <div class="control-row">
+          <span class="controls-title">Tu hogar</span>
+          <div class="seg seg-sm" id="currency-toggle" aria-label="Moneda">
+            <button type="button" class="seg-btn is-active" data-cur="ARS">ARS</button>
+            <button type="button" class="seg-btn" data-cur="USD">USD <span class="muted">blue</span></button>
+          </div>
+        </div>
+        <div class="hh-line">
+          <label class="hh-field hh-field-income">
+            <span>Ingreso del hogar por mes <span class="muted">(sumá lo de todos)</span></span>
+            <div class="income-input">
+              <span class="prefix" id="cur-prefix">$</span>
+              <input id="income-number" type="text" inputmode="numeric" autocomplete="off" value="1.500.000" />
+            </div>
+          </label>
+          <span class="hh-op" aria-hidden="true">÷</span>
+          <label class="hh-field hh-field-people">
+            <span>personas en el hogar</span>
+            <input id="hh-size" type="number" min="1" max="20" value="3" />
+          </label>
+          <span class="hh-op" aria-hidden="true">=</span>
+          <div class="hh-result">
+            <span>ingreso por persona</span>
+            <strong id="per-person-val">—</strong>
+          </div>
+        </div>
+        <p class="per-person muted" id="per-person"></p>
+      </section>
+
+      <section class="headline" id="headline" aria-live="polite">
+        <div class="result" id="result"></div>
+        <div class="ruler" id="ruler"></div>
+      </section>
+      <p class="explain" id="headline-explain"></p>
+
+      <section class="block">
+        <h2>Tu hogar de un vistazo</h2>
+        <p class="explain">
+          Acá juntamos todo en una sola foto: a qué <strong>clase</strong> pertenece tu hogar según su ingreso
+          por persona, cuánta gente queda por encima y por debajo, y cómo te comparás con el hogar típico, el
+          promedio y la línea de pobreza.
+        </p>
+        <div id="class-banner" aria-live="polite"></div>
+        <figure>
+          <figcaption>Las clases por ingreso, de menor a mayor — el ancho de cada tramo es su parte de la población</figcaption>
+          <div class="chart" id="chart-class"></div>
+        </figure>
+        <div id="class-legend"></div>
+        <p class="foot" id="class-foot"></p>
+        <div class="context-strip" id="context-strip" aria-live="polite"></div>
+        <p class="explain" id="vistazo-synthesis"></p>
+      </section>
+
+      <section class="block">
+        <h2>La escalera de ingresos <span class="muted">(en qué decil estás)</span></h2>
+        <p class="explain">
+          INDEC ordena a toda la población de menor a mayor ingreso por persona y la parte en
+          <strong>diez grupos iguales</strong> (deciles): el decil 1 es el 10% que menos tiene; el decil 10,
+          el 10% que más. Cada decil son ~3 millones de personas. Tu hogar cae en uno de esos escalones.
+        </p>
+        <p class="explain">
+          Cómo leer la tabla: <strong>Hasta</strong> es el ingreso máximo de ese decil (su “techo”);
+          <strong>Ingreso medio</strong>, lo que gana en promedio la gente de ese decil;
+          <strong>% del ingreso</strong>, qué parte de toda la plata del país se lleva ese decil —si el reparto fuera
+          perfectamente parejo, cada decil tendría el 10%—; <strong>Pobl.</strong>, cuántos millones de personas son;
+          y <strong>×mediana</strong>, cuántas veces la mediana (el ingreso del hogar típico) representa ese ingreso medio.
+        </p>
+        <div class="gap-chips" id="gap-chips"></div>
+        <div id="ladder"></div>
+        <p class="explain" id="ladder-explain"></p>
+        <figure><figcaption>Ingreso medio de cada decil</figcaption><div class="chart" id="chart-deciles"></div></figure>
+        <p class="foot" id="foot-deciles"></p>
+      </section>
+
+      <section class="block">
+        <h2>¿Cuánto te falta para subir? <span class="muted">(la escalera no es pareja)</span></h2>
+        <p class="explain">
+          La distancia entre escalones no es uniforme: cerca del piso, subir un peldaño cuesta poco; cerca de
+          la cima, cada percentil vale una fortuna. Acá ves cuánto te separa de los próximos hitos —en ingreso
+          por persona y, entre paréntesis, lo que sumaría a todo tu hogar— y qué tan empinada está la escalera
+          justo donde estás parado.
+        </p>
+        <div class="milestones" id="milestones"></div>
+        <figure><figcaption>Cuánto sube el ingreso por persona con cada percentil, cerca de tu posición</figcaption><div class="chart" id="chart-steepness"></div></figure>
+        <p class="foot" id="foot-steepness"></p>
+      </section>
+
+      <section class="block">
+        <h2>Vos, dos veces <span class="muted">(como persona y como hogar)</span></h2>
+        <p class="explain" id="dual-intro"></p>
+        <figure><figcaption>Tu lugar en dos distribuciones distintas</figcaption><div class="chart" id="chart-dual"></div></figure>
+        <p class="explain" id="dual-explain"></p>
+        <p class="foot" id="dual-foot"></p>
+      </section>
+
+      <section class="block" id="splits-section">
+        <h2>El ingreso según quién sos <span class="muted">(sueldos individuales)</span></h2>
+        <p class="explain">
+          Los mismos pesos no se reparten parejo entre la gente: el sexo, la educación y el tipo de trabajo
+          marcan brechas grandes. Estas son las <strong>medianas del sueldo individual</strong> por grupo
+          (entre quienes cobran un ingreso). La línea punteada es la mediana de todo el país; al lado de cada
+          barra, cuántas veces esa mediana representa.
+        </p>
+        <div class="splits-grid" id="splits-grid"></div>
+        <p class="foot" id="splits-foot"></p>
+        <div class="cohort" id="cohort-block">
+          <span class="cohort-q">¿Y vos, entre los tuyos?</span>
+          <div class="cohort-row">
+            <label class="cohort-field">Tu sueldo individual
+              <span class="cohort-money"><span class="cohort-cur">$</span><input id="cohort-income" type="text" inputmode="numeric" autocomplete="off" placeholder="0" /></span>
+            </label>
+            <label class="cohort-field">comparado con
+              <select id="cohort-group" class="cost-select"></select>
+            </label>
+          </div>
+          <p class="explain" id="cohort-result"></p>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Cómo se reparte el ingreso del país</h2>
+        <p class="explain">
+          No alcanza con saber tu lugar: importa cómo está repartida la torta. Acá se ve cuánto del ingreso
+          total se queda cada decil. Si el reparto fuera perfectamente igual, cada 10% de la gente tendría
+          el 10% del ingreso; cuanto más se aparta de eso, mayor es la desigualdad.
+        </p>
+        <div id="concentration"></div>
+        <div class="chart chart-share" id="chart-share"></div>
+        <p class="share-caption" id="share-caption"></p>
+        <figure><figcaption>Curva de Lorenz</figcaption><div class="chart" id="chart-lorenz"></div></figure>
+        <p class="foot" id="foot-lorenz"></p>
+        <p class="explain">
+          La <strong>curva de Lorenz</strong> dibuja esa desigualdad: el eje horizontal es la población
+          acumulada (de más pobre a más rica) y el vertical, el ingreso acumulado. La diagonal sería la
+          igualdad total; cuanto más se hunde la curva por debajo, más concentrado está el ingreso. El área
+          entre ambas, resumida en un número, es el <strong>Gini</strong>.
+        </p>
+      </section>
+
+      <section class="block" id="cima-section" hidden>
+        <h2>La cima <span class="muted">(adentro del 10% más rico)</span></h2>
+        <p class="explain">
+          Entraste al 10% más alto, así que vale mirar adentro: una vez ahí, todos figuran como “top 10%”
+          aunque entre ellos las distancias sean enormes. Este es el zoom a esa cima — mirá cómo se
+          dispara el ingreso en los últimos percentiles.
+        </p>
+        <figure><figcaption>Ingreso por persona en el tramo más alto (percentil 90 → 100)</figcaption><div class="chart" id="chart-tail"></div></figure>
+        <p class="foot" id="foot-tail"></p>
+        <p class="explain" id="cima-explain"></p>
+        <p class="explain muted-note">
+          Atención: las encuestas de hogares como la EPH <strong>captan mal los ingresos más altos</strong>
+          (los muy ricos no responden o subdeclaran). Alguien con $100M por mes prácticamente no aparece:
+          queda fuera de la escala que esta herramienta puede medir, y la concentración real en la cima es
+          todavía mayor que la que se ve acá.
+        </p>
+      </section>
+
+      <section class="block">
+        <div class="control-row">
+          <h2 class="block-title">Cuánto cambia según dónde vivas</h2>
+          <div class="seg seg-sm" id="geo-toggle" aria-label="Nivel geográfico">
+            <button type="button" class="seg-btn is-active" data-geo="region">6 regiones</button>
+            <button type="button" class="seg-btn" data-geo="aglo">32 ciudades</button>
+          </div>
+        </div>
+        <p class="explain" id="regions-explain"></p>
+        <figure><figcaption id="geo-caption">Ingreso por persona — mediana de cada región</figcaption><div class="chart" id="chart-regions"></div></figure>
+        <p class="foot" id="foot-regions"></p>
+      </section>
+
+      <section class="block">
+        <h2>La foto en el tiempo</h2>
+        <p class="explain">
+          Un solo trimestre es una foto. Estas series muestran la película: cómo se movieron la desigualdad
+          (Gini) y la pobreza en los últimos períodos, según los informes oficiales de INDEC.
+        </p>
+        <figure><figcaption>Desigualdad — Gini del ingreso por persona (trimestral)</figcaption><div class="chart" id="chart-trend-gini"></div></figure>
+        <figure><figcaption>Pobreza e indigencia — % de personas (semestral)</figcaption><div class="chart" id="chart-trend-poverty"></div></figure>
+        <p class="foot" id="foot-trend"></p>
+        <figure><figcaption>Mediana del ingreso por persona — nominal vs. en pesos de hoy</figcaption><div class="chart" id="chart-trend-median"></div></figure>
+        <p class="explain">
+          La línea <strong>en pesos de hoy</strong> ajusta cada trimestre por inflación (IPC del INDEC), así que sí
+          es comparable en el tiempo; la de <strong>pesos corrientes</strong> es lo que se veía en el bolsillo en
+          ese momento. La distancia entre las dos <strong>es la inflación</strong>: gran parte de la “suba” nominal
+          sólo corrió detrás de los precios. El ingreso real tocó piso a comienzos de 2024 y recuperó desde ahí,
+          pero muchísimo menos de lo que sugiere el número nominal.
+        </p>
+        <p class="foot" id="foot-trend-median"></p>
+        <figure><figcaption>Ingreso real: la mediana vs. el salario mínimo (en pesos de hoy)</figcaption><div class="chart" id="chart-trend-smvm"></div></figure>
+        <p class="foot" id="foot-trend-smvm"></p>
+      </section>
+
+      <section class="block" id="time-section">
+        <h2>Tu ingreso, en el tiempo <span class="muted">(en pesos comparables)</span></h2>
+        <p class="explain" id="time-intro"></p>
+        <div class="time-controls">
+          <label class="cohort-field">Comparado con la mediana de
+            <select id="time-quarter" class="cost-select"></select>
+          </label>
+          <label class="cohort-field">Inflación del próximo trimestre
+            <span class="time-infl"><input id="time-infl" type="range" min="0" max="30" value="6" step="1" /><output id="time-infl-out">6%</output></span>
+          </label>
+        </div>
+        <p class="explain" id="time-result"></p>
+        <p class="foot" id="time-foot"></p>
+      </section>
+
+      <section class="block">
+        <h2>¿Tu hogar está sobre la línea de pobreza?</h2>
+        <p class="explain">
+          La pobreza no mira tu sueldo sino si el ingreso por persona de tu hogar alcanza para comprar la
+          <strong>Canasta Básica</strong>: la alimentaria (CBA) marca la indigencia y la total (CBT,
+          que suma ropa, transporte, salud, etc.) marca la pobreza.
+        </p>
+        <div class="poverty-line" id="poverty-line"></div>
+
+        <h3>Qué compra el ingreso de cada decil</h3>
+        <p class="explain">
+          Otra forma de ver la desigualdad: cuántas canastas de pobreza compra el ingreso medio de cada
+          decil. Por debajo de <strong>1×</strong> (la línea roja), ese ingreso no alcanza la canasta.
+        </p>
+        <figure><div class="chart" id="chart-canastas"></div></figure>
+        <p class="foot" id="foot-canastas"></p>
+      </section>
+
+      <section class="block" id="cost-section">
+        <h2>¿Llegás a fin de mes? <span class="muted">(costo de vida)</span></h2>
+        <p class="explain">
+          Tu percentil dice dónde estás; esto dice qué alcanza. Estimamos cuánto cuesta por mes sostener un
+          hogar urbano típico —alquiler, servicios, comida, transporte y salud— y lo comparamos con tu ingreso.
+          <strong>Son estimados de referencia de fuentes externas</strong> (Zonaprop, IIEP-UBA, AySA, prensa),
+          no microdatos del INDEC, así que varían mucho según el caso.
+        </p>
+        <div class="cost-controls">
+          <span class="cost-ctrl-label">Región (alquiler):</span>
+          <select class="cost-select" id="cost-region" aria-label="Región del alquiler">
+            <option value="GBA">Gran Buenos Aires</option>
+            <option value="CABA">CABA</option>
+            <option value="Pampeana">Pampeana (Junín, Córdoba, Rosario, La Plata…)</option>
+            <option value="Cuyo">Cuyo (Mendoza, San Juan)</option>
+            <option value="NOA">Noroeste (Tucumán, Salta, Jujuy)</option>
+            <option value="NEA">Noreste (Resistencia, Corrientes, Posadas)</option>
+            <option value="Patagonica">Patagonia (Neuquén, Bariloche…)</option>
+          </select>
+          <button id="cost-reset" class="btn-outline" type="button">restablecer</button>
+        </div>
+        <p class="cost-hint muted">Editá cada valor a tu caso y poné <strong>$0</strong> en lo que no pagues (casa propia, sin prepaga, sin auto, etc.).</p>
+        <div id="cost-table"></div>
+        <figure><figcaption>Tu ingreso del hogar vs. los gastos típicos del mes</figcaption><div class="chart" id="chart-budget"></div></figure>
+        <p class="explain" id="cost-analysis"></p>
+        <p class="foot" id="cost-caveats"></p>
+      </section>
+
+      <section class="block" id="buying-section">
+        <h2>Poder de compra <span class="muted">(en cosas concretas)</span></h2>
+        <p class="explain" id="buying-intro"></p>
+        <div class="bp-grid" id="buying-grid"></div>
+        <p class="foot" id="buying-foot"></p>
+      </section>
+
+      <section class="block">
+        <h2>La evidencia <span class="muted">(de dónde sale tu percentil)</span></h2>
+        <p class="explain">
+          Todo lo anterior sale de estos dos gráficos: la curva acumulada (qué porcentaje gana menos que
+          cada nivel de ingreso) y el histograma (cuánta gente hay en cada tramo). Tu posición está marcada
+          en ambos.
+        </p>
+        <figure><figcaption>Figura 1 · Distribución acumulada (¿qué % gana menos?)</figcaption><div class="chart" id="chart-cdf"></div></figure>
+        <p class="foot" id="foot-cdf"></p>
+        <figure><figcaption>Figura 2 · Cómo se reparte la población</figcaption><div class="chart" id="chart-hist"></div></figure>
+        <p class="foot" id="foot-hist"></p>
+      </section>
+
+      <section class="block" id="blindspots">
+        <h2>Lo que esta herramienta no ve <span class="muted">(los límites)</span></h2>
+        <p class="explain">
+          Todo lo de arriba reproduce a INDEC al peso. Pero una encuesta de ingresos tiene puntos ciegos, y
+          conviene tenerlos a la vista para no leer de más los números:
+        </p>
+        <ul class="blindspots-list" id="blindspots-list"></ul>
+      </section>
+
+      <section class="methodology" id="methodology">
+        <h2>Metodología</h2>
+        <div id="methodology-body"></div>
+      </section>
+
+      <footer class="site-footer" id="site-footer"></footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

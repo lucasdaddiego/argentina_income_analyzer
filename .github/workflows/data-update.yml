@@ -1,0 +1,90 @@
+name: EPH data watch
+
+# Monthly maintenance for the pinned INDEC data.
+#  - New quarter published -> open a DRAFT PR with the mechanical bump (config pins + filenames).
+#    The PR stays draft/red until a human adds the INDEC validation anchors and `make data` passes
+#    (anchors come from INDEC's distribution report, which lags the microdata by months).
+#  - Pinned source unreachable, or the current pin stops reproducing INDEC -> open a tracking issue.
+
+on:
+  schedule:
+    - cron: "0 9 1 * *" # 09:00 UTC on the 1st of every month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: eph-data-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync Python deps
+        run: uv sync
+
+      - name: Reproducibility check (current pin vs INDEC)
+        id: health
+        continue-on-error: true
+        run: make data
+
+      - name: Watch for a newer EPH quarter
+        id: watch
+        env:
+          HEALTH_OUTCOME: ${{ steps.health.outcome }}
+          ISSUE_BODY_FILE: eph-watch-body.md
+        run: uv run python -m pipeline.watch
+
+      - name: Open draft PR with the mechanical bump
+        if: steps.watch.outputs.status == 'new_quarter'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_QUARTER: ${{ steps.watch.outputs.next_quarter }}
+          NEXT_LABEL: ${{ steps.watch.outputs.next_label }}
+          PR_BODY_FILE: eph-bump-pr-body.md
+        run: |
+          set -euo pipefail
+          BRANCH="data/eph-${NEXT_QUARTER}"
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
+            echo "A PR for $BRANCH is already open — skipping."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          uv run python -m pipeline.watch --apply
+          git add -A pipeline/config.py data/checksums.txt
+          git commit -m "data: bump pin to ${NEXT_LABEL} (mechanical; anchors TODO)"
+          git push --force -u origin "$BRANCH"
+          gh pr create --draft \
+            --title "data: bump pin to ${NEXT_LABEL}" \
+            --body-file "$PR_BODY_FILE"
+
+      - name: Open tracking issue (source unreachable / reproducibility failure)
+        if: steps.watch.outputs.needs_issue == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.watch.outputs.issue_title }}
+          BODY_FILE: ${{ steps.watch.outputs.issue_body_file }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          printf '\n[automated watch · run: %s]\n' "$RUN_URL" >> "$BODY_FILE"
+          gh label create data-update --color FBCA04 \
+            --description "Automated EPH data maintenance" 2>/dev/null || true
+          EXISTING=$(gh issue list --state open --label data-update --limit 100 \
+            --json number,title --jq '.[] | select(.title==env.TITLE) | .number' | head -n1 || true)
+          if [ -n "${EXISTING:-}" ]; then
+            echo "Tracking issue already open (#$EXISTING) — skipping."
+          else
+            gh issue create --title "$TITLE" --label data-update --body-file "$BODY_FILE"
+          fi
