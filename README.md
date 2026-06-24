@@ -1,4 +1,4 @@
-# Argentina salary percentile
+# Argentina income analyzer
 
 [![CI (web)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/ci.yml)
 [![Data reproduces INDEC](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/data.yml/badge.svg)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/data.yml)
