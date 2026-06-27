@@ -12,7 +12,8 @@ const cssVar = (name: string, fallback: string): string =>
 const fmtM = (x: number) => x.toLocaleString("es-AR", { maximumFractionDigits: 1 });
 const fmtX = (x: number) => x.toLocaleString("es-AR", { maximumFractionDigits: 2 }) + "×";
 // People counts with adaptive units, so small-but-nonzero numbers never read as "0 M".
-const fmtPeople = (n: number) =>
+// Exported for direct unit testing (the "menos de mil" branch isn't reachable via real population).
+export const fmtPeople = (n: number) =>
   n >= 1e6 ? `${fmtM(n / 1e6)} M` : n >= 1e3 ? `~${Math.round(n / 1e3).toLocaleString("es-AR")} mil` : "menos de mil";
 const signedARS = (n: number) => (n >= 0 ? "+" : "−") + fmtARS(Math.abs(n));
 const signedPct = (n: number) => (n >= 0 ? "+" : "−") + fmtPct(Math.abs(n * 100));
@@ -50,6 +51,10 @@ async function init() {
   $("source-badge").innerHTML =
     `Datos: <strong>${data.source.period_label}</strong> · Encuesta Permanente de Hogares (INDEC) · ` +
     `microdatos verificados (sha ${data.source.sha256.slice(0, 8)})`;
+
+  // Seed state from the rendered controls so the two can't drift (matches the HTML defaults).
+  state.hhIncomeARS = parseMoney($<HTMLInputElement>("income-number").value) || state.hhIncomeARS;
+  state.people = Math.max(1, parseInt($<HTMLInputElement>("hh-size").value || "1", 10));
 
   wireControls();
   setupSticky();
@@ -137,7 +142,8 @@ function syncInputs() {
 }
 
 // Re-format the income field with thousands separators while typing, keeping the caret in place.
-function reformatWithCaret(input: HTMLInputElement) {
+// Exported for direct unit testing (the null-selectionStart fallback isn't reachable via jsdom events).
+export function reformatWithCaret(input: HTMLInputElement) {
   const sel = input.selectionStart ?? input.value.length;
   const digitsBeforeCaret = input.value.slice(0, sel).replace(/\D/g, "").length;
   const digits = input.value.replace(/\D/g, "");
@@ -254,7 +260,9 @@ function incomeClasses(m: Measure): IncomeClass[] {
   ];
 }
 
-function classIndexOf(classes: IncomeClass[], v: number): number {
+// Exported for direct unit testing: with the real (tiling) income classes a match always exists,
+// so the not-found fallback is only reachable with synthetic, gapped class lists.
+export function classIndexOf(classes: IncomeClass[], v: number): number {
   const i = classes.findIndex((c) => v >= c.lo && v < c.hi);
   return i < 0 ? (v <= 0 ? 0 : classes.length - 1) : i;
 }
@@ -754,11 +762,12 @@ function initCostValues() {
 }
 
 // Cost lines with the user's (possibly edited) values. Every line is a flat monthly household amount.
-function effectiveCostLines(): CostLine[] {
+// Exported for testing; lazily seeds the per-line values on first use (every line key is then present).
+export function effectiveCostLines(): CostLine[] {
   const c = data.cost_of_living;
   if (!c) return [];
   if (!Object.keys(state.costValues).length) initCostValues();
-  return c.lines.map((l) => ({ ...l, amount: state.costValues[l.key] ?? l.amount }));
+  return c.lines.map((l) => ({ ...l, amount: state.costValues[l.key] }));
 }
 
 function renderCost() {
@@ -769,8 +778,7 @@ function renderCost() {
     return;
   }
   sec.hidden = false;
-  if (!Object.keys(state.costValues).length) initCostValues();
-  const lines = effectiveCostLines();
+  const lines = effectiveCostLines(); // seeds state.costValues on first use
 
   const rowsHtml = lines
     .map(
@@ -800,7 +808,7 @@ function renderCost() {
   recomputeBudget();
 }
 
-function recomputeBudget() {
+export function recomputeBudget() {
   const c = data.cost_of_living;
   if (!c) return;
   const N = state.people;

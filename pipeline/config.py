@@ -8,6 +8,7 @@ poverty-line values, and the official figures the pipeline must reproduce.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypedDict
 
 # --------------------------------------------------------------------------------------
 # Paths
@@ -48,7 +49,18 @@ NA_VALUES = ["-9"]  # -9 = "no respuesta" for income amounts → treat as missin
 #                    - IPCF: yes (INDEC places "sin ingresos" at the start of decile 1)
 #                    - individual: no (the universe is "perceptores de ingresos")
 # --------------------------------------------------------------------------------------
-MEASURES = {
+class MeasureSpec(TypedDict):
+    key: str
+    value_col: str  # income column to rank on
+    weight_col: str  # matching non-response-corrected expansion factor (NEVER PONDERA)
+    decile_col: str  # INDEC's shipped decile label, for the independent cross-check
+    include_zero: bool  # whether zero-income persons belong in the distribution
+    label: str
+    short: str
+    universe: str
+
+
+MEASURES: dict[str, MeasureSpec] = {
     "individual": {
         "key": "individual",
         "value_col": "P47T",
@@ -111,7 +123,15 @@ AGLOMERADO_NAMES = {
 # below SPLIT_MIN_N unweighted cases are dropped (suppresses noisy cells). CAT_OCUP=0 (no
 # ocupados: jubilaciones, rentas) is intentionally excluded from the job-category panel.
 SPLIT_MIN_N = 200
-SPLITS = {
+
+
+class SplitSpec(TypedDict):
+    col: str
+    label: str
+    groups: dict[int, str]
+
+
+SPLITS: dict[str, SplitSpec] = {
     "sexo": {"col": "CH04", "label": "Sexo",
              "groups": {1: "Varones", 2: "Mujeres"}},
     "educacion": {"col": "NIVEL_ED", "label": "Nivel educativo",
@@ -144,7 +164,23 @@ POVERTY_LINES = {
 # (Informes técnicos Vol. 10 nº 82, pub. 2026-04-06). The pipeline MUST reproduce these
 # for IPCF (the measure INDEC publishes), or the build fails.
 # --------------------------------------------------------------------------------------
-INDEC_IPCF_Q4_2025 = {
+class IndecDecile(TypedDict):
+    decile: int
+    hasta: int | None  # per-decile upper limit ("hasta"); None for the open-ended top decile
+    mean: int
+    share: float
+
+
+class IndecRef(TypedDict):
+    gini: float
+    mean: int
+    median: int
+    population: int
+    d10_d1_median_gap: int
+    deciles: list[IndecDecile]
+
+
+INDEC_IPCF_Q4_2025: IndecRef = {
     "gini": 0.427,
     "mean": 635996,
     "median": 450000,

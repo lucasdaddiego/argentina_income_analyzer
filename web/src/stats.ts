@@ -9,13 +9,12 @@ export function percentileOfIncome(measure: Measure, x: number): number {
   const last = ps.length - 1;
   if (x <= vs[0]) return Math.max(0.1, (x / vs[0]) * ps[0]);
   if (x >= vs[last]) return Math.min(99.99, ps[last]);
-  for (let i = 0; i < last; i++) {
-    if (x >= vs[i] && x < vs[i + 1]) {
-      const frac = (x - vs[i]) / (vs[i + 1] - vs[i]);
-      return Math.round((ps[i] + frac * (ps[i + 1] - ps[i])) * 100) / 100;
-    }
-  }
-  return ps[last];
+  // x is strictly inside (vs[0], vs[last]), so a containing bracket [vs[i], vs[i+1]) is guaranteed
+  // to exist — advance to it, then interpolate the percentile within it.
+  let i = 0;
+  while (!(x >= vs[i] && x < vs[i + 1])) i++;
+  const frac = (x - vs[i]) / (vs[i + 1] - vs[i]);
+  return Math.round((ps[i] + frac * (ps[i + 1] - ps[i])) * 100) / 100;
 }
 
 export function decileOf(percentile: number): number {

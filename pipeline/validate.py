@@ -66,7 +66,6 @@ def validate() -> None:
     # Soft cross-check: our P47T deciles vs INDEC's shipped DECINDR labels.
     print("\n=== CROSS-CHECK: individual income (P47T) vs INDEC's shipped DECINDR labels ===")
     df = load.load_individual()
-    m = config.MEASURES["individual"]
     sub = df[df["DECINDR"].between(1, 10).fillna(False)].dropna(subset=["P47T", "PONDII"])
     sub = sub[(sub["PONDII"] > 0) & (sub["P47T"] > 0)]
     ind = art["measures"]["individual"]

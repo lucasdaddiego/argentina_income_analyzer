@@ -182,7 +182,10 @@ def read_zip_members(url: str) -> dict[str, str | None]:
     with urllib.request.urlopen(req, timeout=DOWNLOAD_TIMEOUT) as resp:
         blob = resp.read()
     names = zipfile.ZipFile(io.BytesIO(blob)).namelist()
-    pick = lambda kind: next((n for n in names if kind in n.lower() and n.lower().endswith(".txt")), None)
+
+    def pick(kind: str) -> str | None:
+        return next((n for n in names if kind in n.lower() and n.lower().endswith(".txt")), None)
+
     return {"individual": pick("individual"), "hogar": pick("hogar")}
 
 

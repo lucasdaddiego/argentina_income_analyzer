@@ -1,0 +1,17 @@
+The MIT license in LICENSE covers the CODE in this repository. The terms below
+govern the DATA shipped alongside it.
+
+DATA
+----
+Figures are derived from the Encuesta Permanente de Hogares (EPH), INDEC
+(Argentina) — public "base usuaria" microdata. Only aggregate/derived statistics
+are redistributed here, with attribution, consistent with INDEC's terms and the
+secreto estadístico (Ley 17.622). Individual records are never shipped — only
+aggregates.
+
+The cost-of-living reference layer cites its own external sources inline in
+pipeline/config.py.
+
+Attribution:
+  Elaboración propia en base a microdatos de la Encuesta Permanente de Hogares
+  (EPH), INDEC. Fuente: INDEC, www.indec.gob.ar.

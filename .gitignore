@@ -6,11 +6,16 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
 # --- Node / Vite ---
 web/node_modules/
 web/dist/
 web/.vite/
+web/coverage/
 
 # --- Raw INDEC microdata (large, re-downloadable, pinned by checksum) — never commit ---
 data/raw/

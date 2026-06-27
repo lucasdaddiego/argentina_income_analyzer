@@ -1,11 +1,20 @@
 # Argentina income analyzer
 
+[![Live demo](https://img.shields.io/badge/demo-live-F38020?logo=cloudflare&logoColor=white)](https://argentina-income-analyzer.pages.dev)
 [![CI (web)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/ci.yml)
+[![Python checks](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/python.yml/badge.svg)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/python.yml)
 [![Data reproduces INDEC](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/data.yml/badge.svg)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions/workflows/data.yml)
+
+[![Coverage 100%](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/lucasdaddiego/argentina_income_analyzer/actions)
+[![Python 3.14](https://img.shields.io/badge/python-3.14-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](web/tsconfig.json)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Where do you stand in Argentina's income distribution? This tool answers that **from the real
 INDEC EPH microdata** — it downloads the household survey, applies the official sample weights, and
 computes the weighted income distribution itself. No eyeballed deciles, no decorative curves.
+
+**▶ Try it live: [argentina-income-analyzer.pages.dev](https://argentina-income-analyzer.pages.dev)**
 
 > **Validated against INDEC** (Evolución de la distribución del ingreso, 4º trim. 2025):
 > Gini IPCF **0.427 ✓**, mediana **$450.000 ✓**, media **$635.996 ✓**, población **30.032.540 ✓**,
@@ -36,6 +45,8 @@ It has two parts:
 ```bash
 make setup        # uv sync (python deps) + npm install (web deps)
 make data         # fetch → verify(sha256) → build(JSON) → validate(vs INDEC)
+make test         # python + web unit tests, each gated at 100% coverage
+make lint         # ruff + mypy + tsc
 make up           # vite dev server  →  http://localhost:5179
 make build        # static bundle in web/dist/
 make deploy       # publish web/dist/ to Cloudflare Pages (needs wrangler auth)
@@ -75,11 +86,29 @@ artifact. Everything quantitative is computed once, offline, and validated.
 ## Project structure
 
 ```
-pipeline/   config.py (pinned facts) · fetch · verify · load · weighted · build · validate
+pipeline/   config (pinned facts) · fetch · verify · load · weighted · build · validate · artifact_check · watch
+tests/      pytest suite for pipeline/ — offline, synthetic fixture, 100% statement+branch coverage
 data/       checksums.txt · percentiles.v1.json   (raw/ is gitignored)
-web/        index.html · src/{main,charts,stats,format,usd,types}.ts · styles.css
+web/        index.html · src/{main,charts,stats,format,usd,types}.ts · styles.css · test/ (vitest, 100%)
 docs/       metodologia.md
 ```
+
+## Tests & CI
+
+Both layers are gated at **100% coverage** — statements **and** branches:
+
+- **`pipeline/`** — `pytest` against a tiny synthetic EPH fixture (no network, no real microdata), 91 tests.
+- **`web/src/`** — `vitest` + `jsdom`, every render path exercised against the committed artifact, 140 tests.
+
+`make test` runs both; `make lint` runs `ruff` + `mypy` + `tsc`. Four GitHub Actions enforce it on
+every push/PR, path-filtered so a web-only change never reaches for INDEC:
+
+| Workflow | What it checks |
+| --- | --- |
+| `ci.yml` | web typecheck + `vitest` 100% gate + production build |
+| `python.yml` | `ruff` + `mypy` + `pytest` 100% gate (offline, fast) |
+| `data.yml` | the pipeline still reproduces INDEC, and the committed artifact matches the rebuild |
+| `data-update.yml` | monthly watch — opens a draft PR when a newer EPH quarter is published |
 
 ## Reproducibility
 
@@ -92,7 +121,9 @@ The monthly poverty lines live in their own `POVERTY_LINES` block (they update m
 ## Deploy
 
 Static bundle + one JSON → ideal for **Cloudflare Pages** (`web/dist/`). Long cache on the
-content artifact, short cache on `index.html`. (Not deployed by this repo.)
+content artifact, short cache on `index.html`. Live at
+**[argentina-income-analyzer.pages.dev](https://argentina-income-analyzer.pages.dev)**, published
+manually with `make deploy` (there's no auto-deploy workflow).
 
 ## Two tiers of data (important)
 
@@ -118,7 +149,7 @@ JSON artifact). Note `make build` builds the *web* bundle, not the data.
 
 ## License
 
-**Code:** [MIT](LICENSE).
+**Code:** [MIT](LICENSE). · **Data:** see [`NOTICE`](NOTICE).
 
 **Data:** Source: **Encuesta Permanente de Hogares (EPH), INDEC** — public _base usuaria_ microdata.
 INDEC permits republishing aggregate/derived statistics with attribution; individual records are never

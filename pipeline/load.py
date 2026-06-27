@@ -45,7 +45,7 @@ def load_individual() -> pd.DataFrame:
         sep=config.CSV_SEP,
         encoding=config.CSV_ENCODING,
         usecols=USECOLS,
-        dtype={c: "string" for c in DECILE_COLS},
+        dtype=dict.fromkeys(DECILE_COLS, "string"),
         na_values=config.NA_VALUES,
         decimal=",",  # IPCF/ITF are N(10,2) with comma decimals (e.g. "450000,00")
         low_memory=False,
@@ -56,7 +56,7 @@ def load_individual() -> pd.DataFrame:
     return df
 
 
-def universe(df: pd.DataFrame, measure: dict) -> pd.DataFrame:
+def universe(df: pd.DataFrame, measure: config.MeasureSpec) -> pd.DataFrame:
     """Return a clean (value, weight) frame for one measure, matching INDEC's universe.
 
     - Drop decile sentinels 12 (no respuesta) and 13 (entrevista no realizada) always.
@@ -69,14 +69,14 @@ def universe(df: pd.DataFrame, measure: dict) -> pd.DataFrame:
     keep = ~code.isin([config.DECILE_NONRESPONSE_I, config.DECILE_NO_INTERVIEW_I])
     if not measure["include_zero"]:
         keep &= code.ne(config.DECILE_NO_INCOME_I)
-    # A blank decile code makes `keep` a nullable boolean; treat unknown codes as excluded
-    # (explicit, and avoids a mask-with-NA error on pandas < 3).
-    keep = keep.fillna(False)
+    # Treat blank/unknown decile codes as excluded for BOTH measures — the universe is defined by
+    # the decile label. `isin()` returns False for <NA>, so without the explicit `code.notna()` a
+    # blank-decile row would slip into the ipcf universe (it only gets dropped for `individual`,
+    # where `code.ne(0)` happens to inject the <NA> that `fillna(False)` then clears).
+    keep = keep.fillna(False) & code.notna()
     out = df.loc[keep, [val, wgt]].rename(columns={val: "value", wgt: "weight"})
     out = out.dropna(subset=["value", "weight"])
     out = out[out["weight"] > 0]
-    if not measure["include_zero"]:
-        out = out[out["value"] > 0]
-    else:
-        out = out[out["value"] >= 0]
+    # individual: strictly positive (perceptores); ipcf: allow the zero-income population.
+    out = out[out["value"] >= 0] if measure["include_zero"] else out[out["value"] > 0]
     return out.reset_index(drop=True)

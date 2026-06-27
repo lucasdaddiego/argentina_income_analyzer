@@ -11,6 +11,8 @@ positive total income); these hold for any real EPH universe. Empty input raises
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 import numpy as np
 import numpy.typing as npt
 
@@ -59,7 +61,7 @@ def lorenz_and_gini(
     # Downsample to evenly spaced population shares for plotting.
     grid = np.linspace(0.0, 1.0, n_points)
     inc_grid = np.interp(grid, pop, inc)
-    points = [[round(float(p), 5), round(float(i), 5)] for p, i in zip(grid, inc_grid)]
+    points = [[round(float(p), 5), round(float(i), 5)] for p, i in zip(grid, inc_grid, strict=True)]
     return points, gini
 
 
@@ -103,9 +105,10 @@ def weighted_histogram(
     }
 
 
-def percentiles(values: npt.ArrayLike, weights: npt.ArrayLike, ps=range(1, 100)) -> dict[str, float]:
+def percentiles(values: npt.ArrayLike, weights: npt.ArrayLike, ps: Iterable[float] | None = None) -> dict[str, float]:
+    ps = list(range(1, 100)) if ps is None else list(ps)
     v = np.asarray(values, float)
     w = np.asarray(weights, float)
     qs = [p / 100.0 for p in ps]
     vals = np.atleast_1d(weighted_quantile(v, w, qs))
-    return {str(p): round(float(val), 2) for p, val in zip(ps, vals)}
+    return {str(p): round(float(val), 2) for p, val in zip(ps, vals, strict=True)}

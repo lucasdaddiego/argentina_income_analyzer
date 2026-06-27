@@ -1,7 +1,8 @@
 name: CI (web)
 
-# Web typecheck + production build. Path-filtered so it only runs when the web app changes;
-# the data pipeline has its own workflow (data.yml), so web-only PRs never touch INDEC.
+# Web typecheck + unit tests (100% coverage gate) + production build. Path-filtered so it only
+# runs when the web app changes; the data pipeline has its own workflows, so web-only PRs never
+# touch INDEC.
 
 on:
   pull_request:
@@ -36,6 +37,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install web deps
         run: npm ci
+        working-directory: web
+      - name: Unit tests + coverage (100% gate)
+        run: npm run test:cov
         working-directory: web
       - name: Typecheck + build
         run: npm run build

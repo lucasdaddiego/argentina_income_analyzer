@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+from pathlib import Path
 
 REL_TOL = 1e-6
 ABS_TOL = 0.011  # > one 2-decimal rounding quantum (0.01)
@@ -36,7 +37,7 @@ def diffs(old, new, path: str = "") -> list[str]:
     if isinstance(old, list) and isinstance(new, list):
         if len(old) != len(new):
             return [f"{path}: list length {len(old)} != {len(new)}"]
-        return [d for i, (a, b) in enumerate(zip(old, new)) for d in diffs(a, b, f"{path}[{i}]")]
+        return [d for i, (a, b) in enumerate(zip(old, new, strict=True)) for d in diffs(a, b, f"{path}[{i}]")]
     # bool is a subclass of int — compare it exactly, before the numeric branch.
     if isinstance(old, bool) or isinstance(new, bool):
         return [] if old is new else [f"{path}: {old!r} != {new!r}"]
@@ -51,8 +52,8 @@ def main(argv: list[str]) -> int:
     if len(argv) != 3:
         print("usage: python -m pipeline.artifact_check OLD.json NEW.json", file=sys.stderr)
         return 2
-    old = json.loads(open(argv[1], encoding="utf-8").read())
-    new = json.loads(open(argv[2], encoding="utf-8").read())
+    old = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
+    new = json.loads(Path(argv[2]).read_text(encoding="utf-8"))
     found = diffs(old, new)
     if found:
         print(f"Artifact drift vs the committed version ({len(found)} difference(s)):")

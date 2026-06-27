@@ -19,15 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-The MIT license above covers the CODE in this repository.
-
-DATA: figures are derived from the Encuesta Permanente de Hogares (EPH),
-INDEC (Argentina) — public base usuaria microdata. Only aggregate/derived
-statistics are redistributed here, with attribution, consistent with INDEC's
-terms and the secreto estadístico (Ley 17.622). The cost-of-living reference
-layer cites its own external sources inline in pipeline/config.py.
-Attribution: Elaboración propia en base a microdatos de la EPH, INDEC
-(www.indec.gob.ar).

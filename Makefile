@@ -6,7 +6,7 @@ WEB := web
 CF_PROJECT := argentina-income-analyzer
 
 .DEFAULT_GOAL := help
-.PHONY: help setup data up build deploy clean
+.PHONY: help setup data up build deploy clean test lint
 
 help:  ## List the available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -21,6 +21,15 @@ data:  ## Rebuild the data artifact: fetch → verify → build → validate
 	$(PY) -m pipeline.verify
 	$(PY) -m pipeline.build
 	$(PY) -m pipeline.validate
+
+test:  ## Run the test suites (Python + web, each gated at 100% coverage)
+	uv run pytest --cov=pipeline --cov-branch
+	cd $(WEB) && npm run test:cov
+
+lint:  ## Lint + typecheck everything (ruff, mypy, tsc)
+	uv run ruff check pipeline tests
+	uv run mypy
+	cd $(WEB) && npm run typecheck
 
 up:  ## Run the local dev server (http://localhost:5179)
 	cd $(WEB) && npm run dev -- --port 5179
