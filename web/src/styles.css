@@ -82,7 +82,7 @@ a { color: var(--accent); }
 .hh-line { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.5rem 0.9rem; margin: 0.2rem 0 0.6rem; }
 .hh-field { display: flex; flex-direction: column; gap: 0.35rem; }
 .hh-field > span { font-size: 0.9rem; }
-.hh-field-people input { width: 5rem; font: inherit; font-size: 1.4rem; font-weight: 600; padding: 0.55rem 0.6rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); text-align: center; }
+.hh-field-people input { width: 5rem; font: inherit; font-size: 1.4rem; font-weight: 600; padding: 0.55rem 0.6rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--ink); text-align: center; }
 .hh-op { font-size: 1.5rem; color: var(--muted); padding: 0.55rem 0; align-self: flex-end; }
 .hh-result { display: flex; flex-direction: column; gap: 0.35rem; }
 .hh-result > span { font-size: 0.9rem; color: var(--muted); }
