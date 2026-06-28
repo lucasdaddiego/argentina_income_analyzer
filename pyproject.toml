@@ -1,5 +1,5 @@
 [project]
-name = "argentina-income-analyzer"
+name = "argentina-income-percentile"
 version = "0.1.0"
 description = "Real Argentine income & poverty percentile tool from INDEC EPH microdata"
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/lucasdaddiego/argentina_income_analyzer"
+Repository = "https://github.com/lucasdaddiego/argentina-income-percentile"
 
 # This is an application, not a distributable package — don't try to build it.
 [tool.uv]

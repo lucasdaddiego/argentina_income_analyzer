@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "argentina-income-analyzer"
+name = "argentina-income-percentile"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

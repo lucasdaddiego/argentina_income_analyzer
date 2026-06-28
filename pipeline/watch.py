@@ -26,7 +26,7 @@ import zipfile
 
 from . import config
 
-UA = "Mozilla/5.0 (argentina-income-analyzer data-watch)"
+UA = "Mozilla/5.0 (argentina-income-percentile data-watch)"
 TIMEOUT = 60
 DOWNLOAD_TIMEOUT = 300
 PINNED_FIELDS = ("QUARTER", "QUARTER_LABEL", "ZIP_URL", "ZIP_NAME", "INDIVIDUAL_FILE", "HOGAR_FILE")

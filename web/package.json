@@ -1,11 +1,11 @@
 {
-  "name": "argentina-income-analyzer-web",
+  "name": "argentina-income-percentile-web",
   "private": true,
   "version": "0.1.0",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lucasdaddiego/argentina_income_analyzer.git"
+    "url": "git+https://github.com/lucasdaddiego/argentina-income-percentile.git"
   },
   "type": "module",
   "engines": {
