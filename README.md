@@ -1,4 +1,4 @@
-# Argentina income percentile
+# Argentina Income Percentile
 
 [![Live demo](https://img.shields.io/badge/demo-live-F38020?logo=cloudflare&logoColor=white)](https://argentina-income-analyzer.pages.dev)
 [![CI (web)](https://github.com/lucasdaddiego/argentina-income-percentile/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasdaddiego/argentina-income-percentile/actions/workflows/ci.yml)
